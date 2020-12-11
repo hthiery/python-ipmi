@@ -108,8 +108,8 @@ ipmitool command:
 Compatibility
 -------------
 
-Python 2.7 is currently  supported.
-Python 3.x support is in beta
+Python 2.7 is legacy.
+Python 3.x support is stable.
 
 Contributing
 ------------
