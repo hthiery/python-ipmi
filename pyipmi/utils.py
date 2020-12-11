@@ -164,4 +164,4 @@ def bcd_search(name):
 def is_string(string):
     if _PY3:
         return isinstance(string, str)
-    return isinstance(string, basestring)
+    return isinstance(string, basestring)  # noqa: F821
