@@ -305,6 +305,8 @@ class InventoryProductInfoArea(CommonInfoArea):
 
 
 class FruDataMultiRecord(FruData):
+    MANUFACTURER_ID_PICMG = 0x315A
+    MANUFACTURER_ID_VITA = 0x81AC
     TYPE_POWER_SUPPLY_INFORMATION = 0
     TYPE_DC_OUTPUT = 1
     TYPE_DC_LOAD = 2
@@ -333,9 +335,19 @@ class FruDataMultiRecord(FruData):
 
     @staticmethod
     def create_from_record_id(data):
-        if data[0] == FruDataMultiRecord.TYPE_OEM_PICMG:
-            return FruPicmgRecord.create_from_record_id(data)
-        else:
+
+        if data[0] != 0xc0:
+            return FruDataUnknown(data)
+
+        try:
+            manufacturer_id = data[5] | data[6] << 8 | data[7] << 16
+            cls = {
+                    FruDataMultiRecord.MANUFACTURER_ID_PICMG: FruPicmgRecord,
+                    FruDataMultiRecord.MANUFACTURER_ID_VITA: FruVitaRecord,
+                  }[manufacturer_id]
+
+            return cls.create_from_record_id(data)
+        except IndexError:
             return FruDataUnknown(data)
 
 
@@ -343,6 +355,66 @@ class FruDataUnknown(FruDataMultiRecord):
     """This class is used to indicate undecoded picmg record."""
 
     pass
+
+
+class FruVitaRecord(FruDataMultiRecord):
+    VITA_RECORD_ID_CHASSIS_ADDRESS_TABLE = 0x10
+    VITA_RECORD_ID_CHASSIS_MANAGER_IP_CONNECTION = 0x13
+    VITA_RECORD_ID_RADIAL_SYSTEM_IPMB_LINK_MAP = 0x15
+    VITA_RECORD_ID_CHASSIS_FAN_GEOGRAPHY = 0x1b
+    VITA_RECORD_ID_LED_DESCRIPTION = 0x2f
+    VITA_RECORD_ID_CHASSIS_IPMB_DESCRIPTION = 0x30
+
+    def __init__(self, data):
+        FruDataMultiRecord.__init__(self, data)
+
+    @staticmethod
+    def create_from_record_id(data):
+        record = FruVitaRecord(data)
+
+        if record.record_id ==\
+                FruVitaRecord.VITA_RECORD_ID_CHASSIS_IPMB_DESCRIPTION:
+            return FruVitaChassisIpmbDescriptionRecord(data)
+        elif record.record_id ==\
+                FruVitaRecord.VITA_RECORD_ID_CHASSIS_ADDRESS_TABLE:
+            return FruVitaChassisAddressTableRecord(data)
+
+        return FruPicmgRecord(data)
+
+    def _from_data(self, data):
+        if len(data) < 10:
+            raise DecodingError('data too short')
+        data = array.array('B', data)
+        FruDataMultiRecord._from_data(self, data)
+        self.manufacturer_id = \
+            data[5] | data[6] << 8 | data[7] << 16
+        self.record_id = data[8]
+        self.format_version = data[9]
+
+
+class FruVitaChassisAddressTableRecord(FruVitaRecord):
+    def _from_data(self, data):
+        if len(data) < 11:
+            raise DecodingError('data too short')
+        FruVitaRecord._from_data(self, data)
+
+        self.identifier = FruTypeLengthString(data[10:31])
+        self.entry_count = data[31]
+        self.table = list()
+        for idx in range(0, self.entry_count):
+            entry = (data[32+(idx*3)], data[32+(idx*3)+1], data[32+(idx*3) + 2])
+            self.table.append(entry)
+
+
+class FruVitaChassisIpmbDescriptionRecord(FruVitaRecord):
+    def _from_data(self, data):
+        if len(data) < 11:
+            raise DecodingError('data too short')
+        FruVitaRecord._from_data(self, data)
+        self.ipmb_a_supported = True if data[10] & 0x1 else False
+        self.ipmb_b_supported = True if data[10] & 0x2 else False
+        self.ipmb_a_max_freq = (data[10] & 0x0c) >> 2
+        self.ipmb_b_max_freq = (data[10] & 0x30) >> 4
 
 
 class FruPicmgRecord(FruDataMultiRecord):
@@ -380,7 +452,7 @@ class FruPicmgRecord(FruDataMultiRecord):
     @staticmethod
     def create_from_record_id(data):
         picmg_record = FruPicmgRecord(data)
-        if picmg_record.picmg_record_type_id ==\
+        if picmg_record.record_id ==\
                 FruPicmgRecord.PICMG_RECORD_ID_MTCA_POWER_MODULE_CAPABILITY:
             return FruPicmgPowerModuleCapabilityRecord(data)
 
@@ -393,7 +465,7 @@ class FruPicmgRecord(FruDataMultiRecord):
         FruDataMultiRecord._from_data(self, data)
         self.manufacturer_id = \
             data[5] | data[6] << 8 | data[7] << 16
-        self.picmg_record_type_id = data[8]
+        self.record_id = data[8]
         self.format_version = data[9]
 
 

@@ -4,6 +4,8 @@ import os
 
 from pyipmi.fru import (FruData, FruPicmgPowerModuleCapabilityRecord,
                         InventoryCommonHeader, InventoryBoardInfoArea,
+                        FruVitaRecord, FruVitaChassisIpmbDescriptionRecord,
+                        FruVitaChassisAddressTableRecord,
                         get_fru_inventory_from_file)
 
 
@@ -72,3 +74,41 @@ def test_BoardInfoArea():
     assert area.product_name.string == 'PowerEdge R515                '
     assert area.serial_number.string == 'CN717033AI0058'
     assert area.part_number.string == '0RMRF7A05'
+
+
+def test_FruVitaChassisIpmbDescription():
+    record = FruVitaRecord.create_from_record_id(b'\xc0\x82\x06\x8c\x2c\xac\x81\x00\x30\x00\x17')
+    assert record.ipmb_a_supported == True
+    assert record.ipmb_b_supported == True
+    assert record.ipmb_a_max_freq == 1
+    assert record.ipmb_b_max_freq == 1
+
+    record = FruVitaChassisIpmbDescriptionRecord(b'\xc0\x82\x06\x8c\x2c\xac\x81\x00\x30\x00\x17')
+    assert record.ipmb_a_supported == True
+    assert record.ipmb_b_supported == True
+    assert record.ipmb_a_max_freq == 1
+    assert record.ipmb_b_max_freq == 1
+
+
+def test_FruVitaChassisAddressTableRecord():
+    record = FruVitaRecord.create_from_record_id(b'\xc0\x02\x30\x70\x9e\xac\x81\x00\x10\x00\xce\x56\x50\x58\x43\x68\x61\x73\x73\x69\x73\x30\x30\x30\x30\xff\xff\xff\xff\xff\xff\x07\x41\x01\x00\x42\x02\x00\x43\x03\x00\x44\x04\x00\x45\x05\x00\x46\x06\x00\x47\x07\x00')
+    assert str(record.identifier) == 'VPXChassis0000'
+    assert record.entry_count == 7
+    assert record.table[0] == (0x41, 1, 0)
+    assert record.table[1] == (0x42, 2, 0)
+    assert record.table[2] == (0x43, 3, 0)
+    assert record.table[3] == (0x44, 4, 0)
+    assert record.table[4] == (0x45, 5, 0)
+    assert record.table[5] == (0x46, 6, 0)
+    assert record.table[6] == (0x47, 7, 0)
+
+    record = FruVitaChassisAddressTableRecord(b'\xc0\x02\x30\x70\x9e\xac\x81\x00\x10\x00\xce\x56\x50\x58\x43\x68\x61\x73\x73\x69\x73\x30\x30\x30\x30\xff\xff\xff\xff\xff\xff\x07\x41\x01\x00\x42\x02\x00\x43\x03\x00\x44\x04\x00\x45\x05\x00\x46\x06\x00\x47\x07\x00')
+    assert str(record.identifier) == 'VPXChassis0000'
+    assert record.entry_count == 7
+    assert record.table[0] == (0x41, 1, 0)
+    assert record.table[1] == (0x42, 2, 0)
+    assert record.table[2] == (0x43, 3, 0)
+    assert record.table[3] == (0x44, 4, 0)
+    assert record.table[4] == (0x45, 5, 0)
+    assert record.table[5] == (0x46, 6, 0)
+    assert record.table[6] == (0x47, 7, 0)
