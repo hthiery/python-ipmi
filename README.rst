@@ -11,6 +11,7 @@ Features
 * system (KCS) interface (using ipmitool as backend)
 * IPMB interface using the `Total Phase`_ Aardvark
 * IPMB interface using ipmb-dev driver on Linux
+* some cool new feature
 
 Tested Devices
 --------------
