@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from array import array
+
 import pyipmi.msgs.vita
 
 from pyipmi.msgs import encode_message
@@ -560,5 +562,428 @@ def test_VitaSetPayloadModeRsp_encode():
     # optional
     m = pyipmi.msgs.vita.VitaSetPayloadModeRsp()
     m.oem_response_3 = 1
+    data = encode_message(m)
+    assert data == b'\x00\x03\x01'
+
+
+def test_VitaGetFanSpeedPropertiesReq_decode():
+    m = pyipmi.msgs.vita.VitaGetFanSpeedPropertiesReq()
+    decode_message(m, b'\x03\x02')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+
+
+def test_VitaGetFanSpeedPropertiesReq_encode():
+    m = pyipmi.msgs.vita.VitaGetFanSpeedPropertiesReq()
+    m.fru_id = 2
+    data = encode_message(m)
+    assert data == b'\x03\x02'
+
+
+def test_VitaGetFanSpeedPropertiesRsp_decode():
+    m = pyipmi.msgs.vita.VitaGetFanSpeedPropertiesRsp()
+    decode_message(m, b'\x00\x03\x0a\x64\x32\x80')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.minimum_fan_level == 10
+    assert m.maximum_fan_level == 100
+    assert m.normal_operating_level == 50
+    assert m.properties.local_control_supported == 1
+
+
+def test_VitaGetFanSpeedPropertiesRsp_encode():
+    m = pyipmi.msgs.vita.VitaGetFanSpeedPropertiesRsp()
+    m.minimum_fan_level = 10
+    m.maximum_fan_level = 100
+    m.normal_operating_level = 50
+    m.properties.local_control_supported = 1
+    data = encode_message(m)
+    assert data == b'\x00\x03\x0a\x64\x32\x80'
+
+
+def test_VitaSetFanLevelReq_decode():
+    m = pyipmi.msgs.vita.VitaSetFanLevelReq()
+    decode_message(m, b'\x03\x02\x32')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+    assert m.fan_level == 50
+
+
+def test_VitaSetFanLevelReq_encode():
+    m = pyipmi.msgs.vita.VitaSetFanLevelReq()
+    m.fru_id = 2
+    m.fan_level = 50
+    data = encode_message(m)
+    assert data == b'\x03\x02\x32'
+
+
+def test_VitaSetFanLevelRsp_decode():
+    m = pyipmi.msgs.vita.VitaSetFanLevelRsp()
+    decode_message(m, b'\x00\x03')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+
+
+def test_VitaSetFanLevelRsp_encode():
+    m = pyipmi.msgs.vita.VitaSetFanLevelRsp()
+    data = encode_message(m)
+    assert data == b'\x00\x03'
+
+
+def test_VitaGetFanLevelReq_decode():
+    m = pyipmi.msgs.vita.VitaGetFanLevelReq()
+    decode_message(m, b'\x03\x02')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+
+
+def test_VitaGetFanLevelReq_encode():
+    m = pyipmi.msgs.vita.VitaGetFanLevelReq()
+    m.fru_id = 2
+    data = encode_message(m)
+    assert data == b'\x03\x02'
+
+
+def test_VitaGetFanLevelRsp_decode():
+    m = pyipmi.msgs.vita.VitaGetFanLevelRsp()
+    decode_message(m, b'\x00\x03\x32')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.override_fan_level == 50
+    assert m.local_control_fan_level is None
+
+    # optional
+    m = pyipmi.msgs.vita.VitaGetFanLevelRsp()
+    decode_message(m, b'\x00\x03\x32\x28')
+    assert m.override_fan_level == 50
+    assert m.local_control_fan_level == 40
+
+
+def test_VitaGetFanLevelRsp_encode():
+    m = pyipmi.msgs.vita.VitaGetFanLevelRsp()
+    m.override_fan_level = 50
+    data = encode_message(m)
+    assert data == b'\x00\x03\x32'
+
+    # optional
+    m = pyipmi.msgs.vita.VitaGetFanLevelRsp()
+    m.override_fan_level = 50
+    m.local_control_fan_level = 40
+    data = encode_message(m)
+    assert data == b'\x00\x03\x32\x28'
+
+
+def test_VitaGetIpmbLinkInfoReq_decode():
+    m = pyipmi.msgs.vita.VitaGetIpmbLinkInfoReq()
+    decode_message(m, b'\x03')
+    assert m.vita_identifier == 3
+
+
+def test_VitaGetIpmbLinkInfoReq_encode():
+    m = pyipmi.msgs.vita.VitaGetIpmbLinkInfoReq()
+    data = encode_message(m)
+    assert data == b'\x03'
+
+
+def test_VitaGetIpmbLinkInfoRsp_decode():
+    m = pyipmi.msgs.vita.VitaGetIpmbLinkInfoRsp()
+    decode_message(m, b'\x00\x03\x0f\x0f\x05')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.ipmb_a.state == 1
+    assert m.ipmb_a.identification == 7
+    assert m.ipmb_b.state == 1
+    assert m.ipmb_b.identification == 7
+    assert m.speed.ipmb_a == 1
+    assert m.speed.ipmb_b == 1
+
+
+def test_VitaGetIpmbLinkInfoRsp_encode():
+    m = pyipmi.msgs.vita.VitaGetIpmbLinkInfoRsp()
+    m.ipmb_a.state = 1
+    m.ipmb_a.identification = 7
+    m.ipmb_b.state = 1
+    m.ipmb_b.identification = 7
+    m.speed.ipmb_a = 1
+    m.speed.ipmb_b = 1
+    data = encode_message(m)
+    assert data == b'\x00\x03\x0f\x0f\x05'
+
+
+def test_VitaGetChassisManagerIpmbAddressReq_decode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpmbAddressReq()
+    decode_message(m, b'\x03')
+    assert m.vita_identifier == 3
+
+
+def test_VitaGetChassisManagerIpmbAddressReq_encode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpmbAddressReq()
+    data = encode_message(m)
+    assert data == b'\x03'
+
+
+def test_VitaGetChassisManagerIpmbAddressRsp_decode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpmbAddressRsp()
+    decode_message(m, b'\x00\x03\x72')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.ipmb_address == 0x72
+
+
+def test_VitaGetChassisManagerIpmbAddressRsp_encode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpmbAddressRsp()
+    m.ipmb_address = 0x72
+    data = encode_message(m)
+    assert data == b'\x00\x03\x72'
+
+
+def test_VitaSetFanPolicyReq_decode():
+    m = pyipmi.msgs.vita.VitaSetFanPolicyReq()
+    decode_message(m, b'\x03\x02\x01\x1e')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+    assert m.fan_policy.fru_power_off_on_fan_failure == 1
+    assert m.fan_policy_timeout == 30
+
+
+def test_VitaSetFanPolicyReq_encode():
+    m = pyipmi.msgs.vita.VitaSetFanPolicyReq()
+    m.fru_id = 2
+    m.fan_policy.fru_power_off_on_fan_failure = 1
+    m.fan_policy_timeout = 30
+    data = encode_message(m)
+    assert data == b'\x03\x02\x01\x1e'
+
+
+def test_VitaSetFanPolicyRsp_decode():
+    m = pyipmi.msgs.vita.VitaSetFanPolicyRsp()
+    decode_message(m, b'\x00\x03')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+
+
+def test_VitaSetFanPolicyRsp_encode():
+    m = pyipmi.msgs.vita.VitaSetFanPolicyRsp()
+    data = encode_message(m)
+    assert data == b'\x00\x03'
+
+
+def test_VitaGetFanPolicyReq_decode():
+    m = pyipmi.msgs.vita.VitaGetFanPolicyReq()
+    decode_message(m, b'\x03\x02')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+
+
+def test_VitaGetFanPolicyReq_encode():
+    m = pyipmi.msgs.vita.VitaGetFanPolicyReq()
+    m.fru_id = 2
+    data = encode_message(m)
+    assert data == b'\x03\x02'
+
+
+def test_VitaGetFanPolicyRsp_decode():
+    m = pyipmi.msgs.vita.VitaGetFanPolicyRsp()
+    decode_message(m, b'\x00\x03\x01\x1e')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.fan_policy.fru_power_off_on_fan_failure == 1
+    assert m.fan_policy_timeout == 30
+
+
+def test_VitaGetFanPolicyRsp_encode():
+    m = pyipmi.msgs.vita.VitaGetFanPolicyRsp()
+    m.fan_policy.fru_power_off_on_fan_failure = 1
+    m.fan_policy_timeout = 30
+    data = encode_message(m)
+    assert data == b'\x00\x03\x01\x1e'
+
+
+def test_VitaFruInventoryDeviceLockControlReq_decode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceLockControlReq()
+    decode_message(m, b'\x03\x02\x01\x11\x22')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+    assert m.lock_criteria.operation == 1
+    assert m.reservation_id == 0x2211
+
+
+def test_VitaFruInventoryDeviceLockControlReq_encode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceLockControlReq()
+    m.fru_id = 2
+    m.lock_criteria.operation = 1
+    m.reservation_id = 0x2211
+    data = encode_message(m)
+    assert data == b'\x03\x02\x01\x11\x22'
+
+
+def test_VitaFruInventoryDeviceLockControlRsp_decode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceLockControlRsp()
+    decode_message(m, b'\x00\x03\x01\x11\x22')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.lock_status.locked == 1
+    assert m.reservation_id == 0x2211
+
+
+def test_VitaFruInventoryDeviceLockControlRsp_encode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceLockControlRsp()
+    m.lock_status.locked = 1
+    m.reservation_id = 0x2211
+    data = encode_message(m)
+    assert data == b'\x00\x03\x01\x11\x22'
+
+
+def test_VitaFruInventoryDeviceWriteReq_decode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceWriteReq()
+    decode_message(m, b'\x03\x02\x11\x22\x10\x00\xaa\xbb\xcc')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+    assert m.reservation_id == 0x2211
+    assert m.offset == 0x0010
+    assert m.data == array('B', [0xaa, 0xbb, 0xcc])
+
+
+def test_VitaFruInventoryDeviceWriteReq_encode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceWriteReq()
+    m.fru_id = 2
+    m.reservation_id = 0x2211
+    m.offset = 0x0010
+    m.data = array('B', [0xaa, 0xbb, 0xcc])
+    data = encode_message(m)
+    assert data == b'\x03\x02\x11\x22\x10\x00\xaa\xbb\xcc'
+
+
+def test_VitaFruInventoryDeviceWriteRsp_decode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceWriteRsp()
+    decode_message(m, b'\x00\x03\x03')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.count_written == 3
+
+
+def test_VitaFruInventoryDeviceWriteRsp_encode():
+    m = pyipmi.msgs.vita.VitaFruInventoryDeviceWriteRsp()
+    m.count_written = 3
+    data = encode_message(m)
+    assert data == b'\x00\x03\x03'
+
+
+def test_VitaGetChassisManagerIpAddressesReq_decode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpAddressesReq()
+    decode_message(m, b'\x03\x01')
+    assert m.vita_identifier == 3
+    assert m.set_selector == 1
+
+
+def test_VitaGetChassisManagerIpAddressesReq_encode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpAddressesReq()
+    m.set_selector = 1
+    data = encode_message(m)
+    assert data == b'\x03\x01'
+
+
+def test_VitaGetChassisManagerIpAddressesRsp_decode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpAddressesRsp()
+    decode_message(m, b'\x00\x03\x02\x01\xc0\xa8\x01\x01')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.address_count == 2
+    assert m.set_selector == 1
+    assert m.address_data == array('B', [0xc0, 0xa8, 0x01, 0x01])
+
+
+def test_VitaGetChassisManagerIpAddressesRsp_encode():
+    m = pyipmi.msgs.vita.VitaGetChassisManagerIpAddressesRsp()
+    m.address_count = 2
+    m.set_selector = 1
+    m.address_data = array('B', [0xc0, 0xa8, 0x01, 0x01])
+    data = encode_message(m)
+    assert data == b'\x00\x03\x02\x01\xc0\xa8\x01\x01'
+
+
+def test_VitaGetFruPersistentControlReq_decode():
+    m = pyipmi.msgs.vita.VitaGetFruPersistentControlReq()
+    decode_message(m, b'\x03\x02')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+
+
+def test_VitaGetFruPersistentControlReq_encode():
+    m = pyipmi.msgs.vita.VitaGetFruPersistentControlReq()
+    m.fru_id = 2
+    data = encode_message(m)
+    assert data == b'\x03\x02'
+
+
+def test_VitaGetFruPersistentControlRsp_decode():
+    m = pyipmi.msgs.vita.VitaGetFruPersistentControlRsp()
+    decode_message(m, b'\x00\x03\x01')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.persistent_control.payload_power_persistently_on == 1
+
+
+def test_VitaGetFruPersistentControlRsp_encode():
+    m = pyipmi.msgs.vita.VitaGetFruPersistentControlRsp()
+    m.persistent_control.payload_power_persistently_on = 1
+    data = encode_message(m)
+    assert data == b'\x00\x03\x01'
+
+
+def test_VitaSetFruPersistentControlReq_decode():
+    m = pyipmi.msgs.vita.VitaSetFruPersistentControlReq()
+    decode_message(m, b'\x03\x02\x01')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+    assert m.persistent_control.payload_power_persistently_on == 1
+
+
+def test_VitaSetFruPersistentControlReq_encode():
+    m = pyipmi.msgs.vita.VitaSetFruPersistentControlReq()
+    m.fru_id = 2
+    m.persistent_control.payload_power_persistently_on = 1
+    data = encode_message(m)
+    assert data == b'\x03\x02\x01'
+
+
+def test_VitaSetFruPersistentControlRsp_decode():
+    m = pyipmi.msgs.vita.VitaSetFruPersistentControlRsp()
+    decode_message(m, b'\x00\x03')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+
+
+def test_VitaSetFruPersistentControlRsp_encode():
+    m = pyipmi.msgs.vita.VitaSetFruPersistentControlRsp()
+    data = encode_message(m)
+    assert data == b'\x00\x03'
+
+
+def test_VitaFruPersistentControlCapabilitiesReq_decode():
+    m = pyipmi.msgs.vita.VitaFruPersistentControlCapabilitiesReq()
+    decode_message(m, b'\x03\x02')
+    assert m.vita_identifier == 3
+    assert m.fru_id == 2
+
+
+def test_VitaFruPersistentControlCapabilitiesReq_encode():
+    m = pyipmi.msgs.vita.VitaFruPersistentControlCapabilitiesReq()
+    m.fru_id = 2
+    data = encode_message(m)
+    assert data == b'\x03\x02'
+
+
+def test_VitaFruPersistentControlCapabilitiesRsp_decode():
+    m = pyipmi.msgs.vita.VitaFruPersistentControlCapabilitiesRsp()
+    decode_message(m, b'\x00\x03\x01')
+    assert m.completion_code == 0
+    assert m.vita_identifier == 3
+    assert m.capabilities.payload_power_persistent_control_supported == 1
+
+
+def test_VitaFruPersistentControlCapabilitiesRsp_encode():
+    m = pyipmi.msgs.vita.VitaFruPersistentControlCapabilitiesRsp()
+    m.capabilities.payload_power_persistent_control_supported = 1
     data = encode_message(m)
     assert data == b'\x00\x03\x01'

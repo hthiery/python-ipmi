@@ -21,6 +21,7 @@ from . import UnsignedInt
 from . import Bitfield
 from . import CompletionCode
 from . import Optional
+from . import RemainingBytes
 from . import GroupExtensionIdentifier
 
 
@@ -547,6 +548,319 @@ class VitaSetPayloadModeReq(VitaMessage):
         GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
         UnsignedInt('fru_id', 1),
         UnsignedInt('mode', 1),
+    )
+
+
+@register_message_class
+class VitaGetFanSpeedPropertiesReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FAN_SPEED_PROPERTIES
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+    )
+
+
+@register_message_class
+class VitaGetFanSpeedPropertiesRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FAN_SPEED_PROPERTIES
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('minimum_fan_level', 1),
+        UnsignedInt('maximum_fan_level', 1),
+        UnsignedInt('normal_operating_level', 1),
+        Bitfield('properties', 1,
+                 Bitfield.ReservedBit(7, 0),
+                 Bitfield.Bit('local_control_supported', 1, default=0)),
+    )
+
+
+@register_message_class
+class VitaSetFanLevelReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_SET_FAN_LEVEL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+        UnsignedInt('fan_level', 1),
+    )
+
+
+@register_message_class
+class VitaSetFanLevelRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_SET_FAN_LEVEL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+    )
+
+
+@register_message_class
+class VitaGetFanLevelReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FAN_LEVEL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+    )
+
+
+@register_message_class
+class VitaGetFanLevelRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FAN_LEVEL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('override_fan_level', 1),
+        Optional(
+            UnsignedInt('local_control_fan_level', 1),
+        ),
+    )
+
+
+@register_message_class
+class VitaGetIpmbLinkInfoReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_IPMB_LINK_INFO
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+    )
+
+
+@register_message_class
+class VitaGetIpmbLinkInfoRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_IPMB_LINK_INFO
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        Bitfield('ipmb_a', 1,
+                 Bitfield.Bit('state', 1, default=0),
+                 Bitfield.Bit('identification', 7, default=0)),
+        Bitfield('ipmb_b', 1,
+                 Bitfield.Bit('state', 1, default=0),
+                 Bitfield.Bit('identification', 7, default=0)),
+        Bitfield('speed', 1,
+                 Bitfield.Bit('ipmb_a', 2, default=0),
+                 Bitfield.Bit('ipmb_b', 2, default=0),
+                 Bitfield.ReservedBit(4, 0)),
+    )
+
+
+@register_message_class
+class VitaGetChassisManagerIpmbAddressReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_CHASSIS_MANAGER_IPMB_ADDRESS
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+    )
+
+
+@register_message_class
+class VitaGetChassisManagerIpmbAddressRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_CHASSIS_MANAGER_IPMB_ADDRESS
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('ipmb_address', 1),
+    )
+
+
+@register_message_class
+class VitaSetFanPolicyReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_SET_FAN_POLICY
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+        Bitfield('fan_policy', 1,
+                 Bitfield.Bit('fru_power_off_on_fan_failure', 1, default=0),
+                 Bitfield.ReservedBit(7, 0)),
+        UnsignedInt('fan_policy_timeout', 1),
+    )
+
+
+@register_message_class
+class VitaSetFanPolicyRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_SET_FAN_POLICY
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+    )
+
+
+@register_message_class
+class VitaGetFanPolicyReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FAN_POLICY
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+    )
+
+
+@register_message_class
+class VitaGetFanPolicyRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FAN_POLICY
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        Bitfield('fan_policy', 1,
+                 Bitfield.Bit('fru_power_off_on_fan_failure', 1, default=0),
+                 Bitfield.ReservedBit(7, 0)),
+        UnsignedInt('fan_policy_timeout', 1),
+    )
+
+
+@register_message_class
+class VitaFruInventoryDeviceLockControlReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_FRU_INVENTROY_DEVICE_LOCK_CONTROL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+        Bitfield('lock_criteria', 1,
+                 Bitfield.Bit('operation', 2, default=0),
+                 Bitfield.ReservedBit(6, 0)),
+        UnsignedInt('reservation_id', 2),
+    )
+
+
+@register_message_class
+class VitaFruInventoryDeviceLockControlRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_FRU_INVENTROY_DEVICE_LOCK_CONTROL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        Bitfield('lock_status', 1,
+                 Bitfield.Bit('locked', 1, default=0),
+                 Bitfield.ReservedBit(7, 0)),
+        UnsignedInt('reservation_id', 2),
+    )
+
+
+@register_message_class
+class VitaFruInventoryDeviceWriteReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_FRU_INVENTROY_DEVICE_WRITE
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+        UnsignedInt('reservation_id', 2),
+        UnsignedInt('offset', 2),
+        RemainingBytes('data'),
+    )
+
+
+@register_message_class
+class VitaFruInventoryDeviceWriteRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_FRU_INVENTROY_DEVICE_WRITE
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('count_written', 1),
+    )
+
+
+@register_message_class
+class VitaGetChassisManagerIpAddressesReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_CHASSIS_MANAGER_IP_ADDRESSES
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('set_selector', 1),
+    )
+
+
+@register_message_class
+class VitaGetChassisManagerIpAddressesRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_CHASSIS_MANAGER_IP_ADDRESSES
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('address_count', 1),
+        UnsignedInt('set_selector', 1),
+        RemainingBytes('address_data'),
+    )
+
+
+@register_message_class
+class VitaGetFruPersistentControlReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FRU_PERSISTENT_CONTROL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+    )
+
+
+@register_message_class
+class VitaGetFruPersistentControlRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_GET_FRU_PERSISTENT_CONTROL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        Bitfield('persistent_control', 1,
+                 Bitfield.Bit('payload_power_persistently_on', 1, default=0),
+                 Bitfield.ReservedBit(7, 0)),
+    )
+
+
+@register_message_class
+class VitaSetFruPersistentControlReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_SET_FRU_PERSISTENT_CONTROL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+        Bitfield('persistent_control', 1,
+                 Bitfield.Bit('payload_power_persistently_on', 1, default=0),
+                 Bitfield.ReservedBit(7, 0)),
+    )
+
+
+@register_message_class
+class VitaSetFruPersistentControlRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_SET_FRU_PERSISTENT_CONTROL
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+    )
+
+
+@register_message_class
+class VitaFruPersistentControlCapabilitiesReq(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_FRU_PERSISTENT_CONTROL_CAPABILITIES
+    __netfn__ = constants.NETFN_GROUP_EXTENSION
+    __fields__ = (
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        UnsignedInt('fru_id', 1),
+    )
+
+
+@register_message_class
+class VitaFruPersistentControlCapabilitiesRsp(VitaMessage):
+    __cmdid__ = constants.CMDID_VITA_FRU_PERSISTENT_CONTROL_CAPABILITIES
+    __netfn__ = constants.NETFN_GROUP_EXTENSION | 1
+    __fields__ = (
+        CompletionCode(),
+        GroupExtensionIdentifier('vita_identifier', GROUP_EXTENSION_VSO),
+        Bitfield('capabilities', 1,
+                 Bitfield.Bit('payload_power_persistent_control_supported',
+                             1, default=0),
+                 Bitfield.ReservedBit(7, 0)),
     )
 
 
