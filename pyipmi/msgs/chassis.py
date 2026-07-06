@@ -31,6 +31,23 @@ CONTROL_HARD_RESET = 3
 CONTROL_DIAGNOSTIC_INTERRUPT = 4
 CONTROL_SOFT_SHUTDOWN = 5
 
+POWER_RESTORE_POLICY_STAY_OFF = 0
+POWER_RESTORE_POLICY_RESTORE_PREVIOUS = 1
+POWER_RESTORE_POLICY_ALWAYS_POWER_UP = 2
+
+RESTART_CAUSE_UNKNOWN = 0x0
+RESTART_CAUSE_CHASSIS_CONTROL_COMMAND = 0x1
+RESTART_CAUSE_RESET_VIA_PUSHBUTTON = 0x2
+RESTART_CAUSE_POWER_UP_VIA_PUSHBUTTON = 0x3
+RESTART_CAUSE_WATCHDOG_EXPIRATION = 0x4
+RESTART_CAUSE_OEM = 0x5
+RESTART_CAUSE_POWER_UP_AFTER_AC_ALWAYS_ON_POLICY = 0x6
+RESTART_CAUSE_POWER_UP_AFTER_AC_RESTORE_PREVIOUS_POLICY = 0x7
+RESTART_CAUSE_RESET_VIA_PEF = 0x8
+RESTART_CAUSE_POWER_CYCLE_VIA_PEF = 0x9
+RESTART_CAUSE_SOFT_RESET = 0xa
+RESTART_CAUSE_POWER_UP_VIA_RTC = 0xb
+
 
 @register_message_class
 class GetChassisCapabilitiesReq(Message):
@@ -118,6 +135,126 @@ class ChassisControlRsp(Message):
     __netfn__ = constants.NETFN_CHASSIS | 1
     __fields__ = (
         CompletionCode(),
+    )
+
+
+@register_message_class
+class ChassisResetReq(Message):
+    __cmdid__ = constants.CMDID_CHASSIS_RESET
+    __netfn__ = constants.NETFN_CHASSIS
+
+
+@register_message_class
+class ChassisResetRsp(Message):
+    __cmdid__ = constants.CMDID_CHASSIS_RESET
+    __netfn__ = constants.NETFN_CHASSIS | 1
+    __fields__ = (
+        CompletionCode(),
+    )
+
+
+@register_message_class
+class ChassisIdentifyReq(Message):
+    __cmdid__ = constants.CMDID_CHASSIS_IDENTIFY
+    __netfn__ = constants.NETFN_CHASSIS
+    __fields__ = (
+        Optional(
+            UnsignedInt('identify_interval', 1),
+        ),
+        # Note: bit 0 is "force identify on", bits 7:1 are reserved. Kept as
+        # a plain byte (rather than Bitfield) since Optional(Bitfield(...))
+        # is broken for decoding in this framework (Optional.create()
+        # returns None instead of a BitWrapper, so Bitfield.decode() raises
+        # AttributeError when this optional byte is present on the wire).
+        Optional(
+            UnsignedInt('force_identify_on', 1),
+        ),
+    )
+
+
+@register_message_class
+class ChassisIdentifyRsp(Message):
+    __cmdid__ = constants.CMDID_CHASSIS_IDENTIFY
+    __netfn__ = constants.NETFN_CHASSIS | 1
+    __fields__ = (
+        CompletionCode(),
+    )
+
+
+@register_message_class
+class SetChassisCapabilitiesReq(Message):
+    __cmdid__ = constants.CMDID_SET_CHASSIS_CAPABILITIES
+    __netfn__ = constants.NETFN_CHASSIS
+    __fields__ = (
+        Bitfield('capabilities_flags', 1,
+                 Bitfield.Bit('intrusion_sensor', 1, default=0),
+                 Bitfield.Bit('frontpanel_lockout', 1, default=0),
+                 Bitfield.Bit('diagnostic_interrupt', 1, default=0),
+                 Bitfield.Bit('power_interlock', 1, default=0),
+                 Bitfield.ReservedBit(4, 0)),
+        UnsignedInt('fru_info_device_address', 1),
+        UnsignedInt('sdr_device_address', 1),
+        UnsignedInt('sel_device_address', 1),
+        UnsignedInt('system_management_device_address', 1),
+        Optional(
+            UnsignedInt('bridge_device_address', 1),
+        ),
+    )
+
+
+@register_message_class
+class SetChassisCapabilitiesRsp(Message):
+    __cmdid__ = constants.CMDID_SET_CHASSIS_CAPABILITIES
+    __netfn__ = constants.NETFN_CHASSIS | 1
+    __fields__ = (
+        CompletionCode(),
+    )
+
+
+@register_message_class
+class SetPowerRestorePolicyReq(Message):
+    __cmdid__ = constants.CMDID_SET_POWER_RESTORE_POLICY
+    __netfn__ = constants.NETFN_CHASSIS
+    __fields__ = (
+        Bitfield('power_restore_policy', 1,
+                 Bitfield.Bit('policy', 3, default=0),
+                 Bitfield.ReservedBit(5, 0)),
+    )
+
+
+@register_message_class
+class SetPowerRestorePolicyRsp(Message):
+    __cmdid__ = constants.CMDID_SET_POWER_RESTORE_POLICY
+    __netfn__ = constants.NETFN_CHASSIS | 1
+    __fields__ = (
+        CompletionCode(),
+        Bitfield('power_restore_policy_support', 1,
+                 Bitfield.Bit('stay_powered_off_supported', 1, default=0),
+                 Bitfield.Bit('restore_previous_state_supported', 1,
+                             default=0),
+                 Bitfield.Bit('always_power_up_supported', 1, default=0),
+                 Bitfield.ReservedBit(5, 0)),
+    )
+
+
+@register_message_class
+class GetSystemRestartCauseReq(Message):
+    __cmdid__ = constants.CMDID_GET_SYSTEM_RESTART_CAUSE
+    __netfn__ = constants.NETFN_CHASSIS
+
+
+@register_message_class
+class GetSystemRestartCauseRsp(Message):
+    __cmdid__ = constants.CMDID_GET_SYSTEM_RESTART_CAUSE
+    __netfn__ = constants.NETFN_CHASSIS | 1
+    __fields__ = (
+        CompletionCode(),
+        Bitfield('restart_cause', 1,
+                 Bitfield.Bit('cause', 4, default=0),
+                 Bitfield.ReservedBit(4, 0)),
+        Bitfield('channel', 1,
+                 Bitfield.Bit('channel_number', 4, default=0),
+                 Bitfield.ReservedBit(4, 0)),
     )
 
 
